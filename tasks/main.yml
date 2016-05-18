@@ -1,0 +1,9 @@
+---
+
+- name: install specific python
+  include: "{{item}}"
+  with_items:
+    - "install_python{{version_python}}.yml"
+    - "install_setuptools{{version_python}}.yml"
+    - "install_pip{{version_python}}.yml"
+  when: version_python in versions_python

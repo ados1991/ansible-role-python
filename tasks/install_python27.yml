@@ -1,0 +1,51 @@
+---
+
+- name: Ensure python27 var packages are defined
+  fail: msg="{{item_var}} is not defined"
+  when: "{{item_var}} is not defined"
+  with_items: "{{required_vars.python27}}"
+  loop_control:
+    loop_var: item_var
+
+- name: Ensure dependencies are installed
+  yum: name={{ item_pak }} state=present
+  with_items:
+    - zlib-devel
+    - bzip2-devel
+    - openssl-devel
+    - ncurses-devel
+    - readline-devel
+    - pcre-devel
+    - curl-devel
+    - sqlite-devel
+    - gmp-devel
+    - python-devel
+  loop_control:
+    loop_var: item_pak
+
+- name: Check if python is already installed
+  stat: path=/usr/local/bin/python2.7
+  register: python
+
+- name: Download Python
+  get_url: url={{python27_url_package}}
+           dest=/tmp/Python27.tar
+  when: not python.stat.exists
+
+- name: Unpack Python
+  unarchive: src=/tmp/Python27.tar dest=/tmp copy=no 
+  when: not python.stat.exists
+
+- name: Configure, compile and install Python
+  shell: cd /tmp/{{python27_version}} && {{ item_con }}
+  with_items:
+    - ./configure
+    - make
+    - make altinstall
+  loop_control:
+    loop_var: item_con
+  when: not python.stat.exists
+
+- name: add python2.7 to path
+  file: src=/usr/local/bin/python2.7 dest=/usr/local/bin/python state=link
+  when: not python.stat.exists
